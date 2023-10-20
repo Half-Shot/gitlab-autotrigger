@@ -188,6 +188,7 @@ async function main() {
 
     for (const project of projects) {
         try {
+            console.log(`Checking ${project.githubRepo}`);
             const latestTag = await getLatestGitHubImage(project.githubRepo);
             console.log(`Determined latest tag is ${latestTag}`);
             const latestImages = await getExistingGitLabImages(gitlabInstance, project.gitlabProject, latestTag, project.containerName);
@@ -199,13 +200,13 @@ async function main() {
             }
             if (latestImages.includes(latestTag)) {
                 console.log('☑️ All up to date');
-                return;
+                continue;
             } else {
                 console.log('🆕 New image found');
             }
             if (await getRunningPipelines(gitlabInstance, project.gitlabProject) > 0) {
                 console.log('⏳ Some pipelines are still running, skipping');
-                return;
+                continue;
             }
         
             const url = await startPipeline(gitlabInstance, "101", "master", {
