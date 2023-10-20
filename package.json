@@ -1,0 +1,14 @@
+{
+  "name": "gitlab-autotrigger",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Half-Shot <will@half-shot.uk>",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.2",
+    "@types/node": "^20",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  }
+}
