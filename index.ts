@@ -165,7 +165,7 @@ async function main() {
     }
 
     const projects = process.env.AUTOTRIGGER_PROJECTS?.trim().split(',').map(v => {
-        const parts = v.split('|');
+        const parts = v.trim().split('|');
         if (!parts[0] || !parts[1]) {
             throw Error('Projects is misconfigured');
         }
