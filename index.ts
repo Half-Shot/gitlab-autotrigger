@@ -67,7 +67,8 @@ async function runGitLabQuery<T extends Exclude<object, GitLabError>>(operationN
 
 }
 
-async function getExistingGitLabImages(inst: GitLabInstance, fullPath: string, imageName: string, containerRepositoryName = ""): Promise<string[]> {
+async function getExistingGitLabInfo(inst: GitLabInstance, fullPath: string, imageName: string, containerRepositoryName = ""): Promise<{
+    images: string[], defaultBranch: string}> {
     const query = `
     query getImageRepository($fullPath: ID!){
         project(fullPath: $fullPath) {
@@ -79,6 +80,7 @@ async function getExistingGitLabImages(inst: GitLabInstance, fullPath: string, i
                     }
                 }
             }
+            default_branch
         }
     }
     query getImages($id: ContainerRepositoryID!, $name: String!) {
@@ -92,7 +94,10 @@ async function getExistingGitLabImages(inst: GitLabInstance, fullPath: string, i
             }
         }
     }`;
-    const { data: { project }} = await runGitLabQuery<{data: {project: {containerRepositories: { edges: [{node: {name: string, id: string}}]}}}}>("getImageRepository", inst, query, {
+    const { data: { project }} = await runGitLabQuery<{data: {project: {
+        containerRepositories: { edges: [{node: {name: string, id: string}}]},
+        default_branch: string,
+    }}}>("getImageRepository", inst, query, {
         fullPath,
     });
     const repository = project.containerRepositories.edges.find(e => e.node.name === containerRepositoryName)?.node.id;
@@ -104,7 +109,10 @@ async function getExistingGitLabImages(inst: GitLabInstance, fullPath: string, i
         id: repository,
     }
     const result = await runGitLabQuery<GitLabGetImages>("getImages", inst, query, variables);
-    return result.data.containerRepository.tags.edges.map(n => n.node.name);
+    return {
+        images: result.data.containerRepository.tags.edges.map(n => n.node.name),
+        defaultBranch: project.default_branch,
+    };
 }
 
 async function getRunningPipelines(inst: GitLabInstance, fullPath: string): Promise<number> {
@@ -194,7 +202,7 @@ async function main() {
             console.log(`Checking ${project.githubRepo}`);
             const latestTag = await getLatestGitHubImage(project.githubRepo);
             console.log(`Determined latest tag is ${latestTag}`);
-            const latestImages = await getExistingGitLabImages(gitlabInstance, project.gitlabProject, latestTag, project.containerName);
+            const { images: latestImages, defaultBranch } = await getExistingGitLabInfo(gitlabInstance, project.gitlabProject, latestTag, project.containerName);
         
             if (latestImages.length) {
                 console.log(`Determined latest images are ${latestImages}`);
@@ -212,6 +220,7 @@ async function main() {
                 continue;
             }
         
+            const url = await startPipeline(gitlabInstance, project.gitlabProject, defaultBranch, {
                 [project.tagVariableName]: latestTag,
                 ...project.extraVariables
             });
