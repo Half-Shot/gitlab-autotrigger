@@ -200,7 +200,7 @@ async function main() {
             containerName: parts[2] ?? '',
             tagVariableName: parts[3] ?? 'TAG_NAME',
             // A sequence of foo=bar,bar=baz
-            extraVariables: Object.fromEntries((parts[4] ?? '').split(',').filter(s => !!s).map(s => s.split('=')))
+            extraVariables: Object.fromEntries((decodeURIComponent(parts[4] ?? '')).split('').filter(s => !!s).map(s => s.split('=')))
         }
     });
     if (!projects || projects.length === 0) {

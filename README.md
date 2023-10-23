@@ -9,10 +9,12 @@ This project expects you to provide your own cron job system.
 
 GITLAB_TOKEN="personal-token"
 GITLAB_DOMAIN="gitlab.example.com"
-AUTOTRIGGER_PROJECTS="github/repo|gitlab/project|optional-container-subpath|VERSION_TAG|EXTRA_VARS=foo,another/github|another/gitlab"
+AUTOTRIGGER_PROJECTS="github/repo|gitlab/project|optional-container-subpath|VERSION_TAG|EXTRA_VARS%2Cfoo,another/github|another/gitlab"
 
 Where autotrigger is a comma seperated list of projects in this format:
 
 `<github_repo>|<gitlab_project>|<container_registry_image_subpath>|<custom_version_pipeline_variable>|<extra_pipeline_variables>`
 
 The default for `custom_version_pipeline_variable` is `TAG_NAME`
+
+`extra_pipeline_variables` must be URI encoded.
