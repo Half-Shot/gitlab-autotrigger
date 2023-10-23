@@ -173,6 +173,9 @@ async function main() {
             githubRepo: parts[0],
             gitlabProject: parts[1],
             containerName: parts[2] ?? '',
+            tagVariableName: parts[3] ?? 'TAG_NAME',
+            // A sequence of foo=bar,bar=baz
+            extraVariables: Object.fromEntries((parts[4] ?? '').split(',').filter(s => !!s).map(s => s.split('=')))
         }
     });
     if (!projects || projects.length === 0) {
@@ -209,8 +212,8 @@ async function main() {
                 continue;
             }
         
-            const url = await startPipeline(gitlabInstance, "101", "master", {
-                SYNAPSE_TAG: latestTag,
+                [project.tagVariableName]: latestTag,
+                ...project.extraVariables
             });
             console.log(`🆕 New build started at ${url}`);
         } catch (ex) {
