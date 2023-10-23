@@ -22,6 +22,15 @@ interface GitLabGetPipelineCount {
     }
 }
 
+interface GitLabGetProjectInfo {
+    data: {
+        project: {
+            containerRepositories: { edges: [{node: {name: string, id: string}}]},
+            branchRules: { edges: [{node: {isDefault: boolean, name: string}}]},
+        }
+    }
+}
+
 
 interface GitLabError {
     errors: {
@@ -80,7 +89,14 @@ async function getExistingGitLabInfo(inst: GitLabInstance, fullPath: string, ima
                     }
                 }
             }
-            default_branch
+            branchRules {
+                edges {
+                    node {
+                        name
+                        isDefault
+                    }
+                }
+            }
         }
     }
     query getImages($id: ContainerRepositoryID!, $name: String!) {
@@ -94,10 +110,7 @@ async function getExistingGitLabInfo(inst: GitLabInstance, fullPath: string, ima
             }
         }
     }`;
-    const { data: { project }} = await runGitLabQuery<{data: {project: {
-        containerRepositories: { edges: [{node: {name: string, id: string}}]},
-        default_branch: string,
-    }}}>("getImageRepository", inst, query, {
+    const { data: { project }} = await runGitLabQuery<GitLabGetProjectInfo>("getImageRepository", inst, query, {
         fullPath,
     });
     const repository = project.containerRepositories.edges.find(e => e.node.name === containerRepositoryName)?.node.id;
@@ -109,9 +122,13 @@ async function getExistingGitLabInfo(inst: GitLabInstance, fullPath: string, ima
         id: repository,
     }
     const result = await runGitLabQuery<GitLabGetImages>("getImages", inst, query, variables);
+    const defaultBranch = project.branchRules.edges.find(d => d.node.isDefault)?.node.name;
+    if (!defaultBranch) {
+        throw Error('Could not determine the default branch for this project.');
+    }
     return {
         images: result.data.containerRepository.tags.edges.map(n => n.node.name),
-        defaultBranch: project.default_branch,
+        defaultBranch,
     };
 }
 
