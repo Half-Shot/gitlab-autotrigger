@@ -189,6 +189,8 @@ async function main() {
         throw Error('GITLAB_DOMAIN is not set in env vars.');
     }
 
+    const looseMatchTag = Boolean(process.env.LOOSE_MATCH_TAG ?? 'true');
+
     const projects = process.env.AUTOTRIGGER_PROJECTS?.trim().split(',').map(v => {
         const parts = v.trim().split('|');
         if (!parts[0] || !parts[1]) {
@@ -229,9 +231,11 @@ async function main() {
             if (latestImages.includes(latestTag)) {
                 console.log('☑️ All up to date');
                 continue;
-            } else {
-                console.log('🆕 New image found');
+            } else if (looseMatchTag && latestImages.find(i => i.startsWith(latestTag))) {
+                console.log('☑️ All up to date (loose match)');
+                continue;
             }
+            console.log('🆕 New image found');
             if (await getRunningPipelines(gitlabInstance, project.gitlabProject) > 0) {
                 console.log('⏳ Some pipelines are still running, skipping');
                 continue;
