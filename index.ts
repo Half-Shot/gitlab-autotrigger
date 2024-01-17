@@ -81,7 +81,7 @@ async function getExistingGitLabInfo(inst: GitLabInstance, fullPath: string, ima
     const query = `
     query getImageRepository($fullPath: ID!){
         project(fullPath: $fullPath) {
-            containerRepositories(first: 5) {
+            containerRepositories(first: 50) {
                 edges {
                     node {
                         id
