@@ -11,7 +11,7 @@ This project expects you to provide your own cron job system.
 GITLAB_TOKEN="personal-token"
 GITLAB_DOMAIN="gitlab.example.com"
 AUTOTRIGGER_PROJECTS="github/repo|gitlab/project|optional-container-subpath|VERSION_TAG|EXTRA_VARS%2Cfoo,another/github|another/gitlab"
-LOOSE_MATCH_TAG=true
+LOOSE_MATCH_TAG=true # Check whether an image *starts* with the latest tag, rather than an exact match.
 ```
 
 Where autotrigger is a comma seperated list of projects in this format:
