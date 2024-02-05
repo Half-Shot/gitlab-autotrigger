@@ -148,16 +148,12 @@ async function getRunningPipelines(inst: GitLabInstance, fullPath: string): Prom
 }
 
 async function getLatestGitHubImage(repository: string): Promise<string> {
-    const response = await fetch(`https://api.github.com/repos/${repository}/releases?per_page=10`);
+    const response = await fetch(`https://api.github.com/repos/${repository}/releases/latest`);
     if (!response.ok) {
         throw Error(`Got a ${response.status} from GitHub: ${await response.text()}`);
     }
-    const releases = await response.json() as GitHubRelease[];
-    const latest = releases.filter(r => !r.prerelease && !r.draft).map(r => r.tag_name).sort().reverse()[0];
-    if (!latest) {
-        throw Error('Could not determine latest release.')
-    }
-    return latest;
+    const release = await response.json() as GitHubRelease;
+    return release.tag_name;
 }
 
 async function startPipeline(inst: GitLabInstance, projectId: string, ref: string, variables: Record<string, string>): Promise<string> {
