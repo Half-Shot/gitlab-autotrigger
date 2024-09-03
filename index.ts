@@ -147,8 +147,12 @@ async function getRunningPipelines(inst: GitLabInstance, fullPath: string): Prom
     return result.data.project.pipelines.count;
 }
 
-async function getLatestGitHubImage(repository: string): Promise<string> {
-    const response = await fetch(`https://api.github.com/repos/${repository}/releases/latest`);
+async function getLatestGitHubImage(repository: string, token?: string): Promise<string> {
+    const response = await fetch(`https://api.github.com/repos/${repository}/releases/latest`, {
+        headers: typeof token === "string" ? {
+            'Authorization': `Bearer ${token}`,
+        } : {}
+    });
     if (!response.ok) {
         throw Error(`Got a ${response.status} from GitHub: ${await response.text()}`);
     }
@@ -184,21 +188,24 @@ async function main() {
     if (!gitlabDomain) {
         throw Error('GITLAB_DOMAIN is not set in env vars.');
     }
+    // Optional.
+    const githubToken = process.env.GITHIB_TOKEN;
 
     const looseMatchTag = Boolean(process.env.LOOSE_MATCH_TAG ?? 'true');
 
     const projects = process.env.AUTOTRIGGER_PROJECTS?.trim().split(',').map(v => {
         const parts = v.trim().split('|');
-        if (!parts[0] || !parts[1]) {
+        const [ githubRepo, gitlabProject, containerName, tagVariableName, extraVariables ] = parts;
+        if (!githubRepo || !gitlabProject) {
             throw Error('Projects is misconfigured');
         }
         return {
-            githubRepo: parts[0],
-            gitlabProject: parts[1],
-            containerName: parts[2] ?? '',
-            tagVariableName: parts[3] ?? 'TAG_NAME',
+            githubRepo,
+            gitlabProject,
+            containerName: containerName ?? '',
+            tagVariableName: tagVariableName ?? 'TAG_NAME',
             // A sequence of foo=bar,bar=baz
-            extraVariables: Object.fromEntries((decodeURIComponent(parts[4] ?? '')).split('').filter(s => !!s).map(s => s.split('=')))
+            extraVariables: Object.fromEntries((decodeURIComponent(extraVariables ?? '')).split('').filter(s => !!s).map(s => s.split('=')))
         }
     });
     if (!projects || projects.length === 0) {
@@ -215,7 +222,7 @@ async function main() {
     for (const project of projects) {
         try {
             console.log(`Checking ${project.githubRepo}`);
-            const latestTag = await getLatestGitHubImage(project.githubRepo);
+            const latestTag = await getLatestGitHubImage(project.githubRepo, githubToken);
             console.log(`Determined latest tag is ${latestTag}`);
             const { images: latestImages, defaultBranch } = await getExistingGitLabInfo(gitlabInstance, project.gitlabProject, latestTag, project.containerName);
         
