@@ -2,6 +2,7 @@ FROM node:20-alpine AS builder
 WORKDIR /src
 COPY index.ts /src/index.ts
 COPY package.json yarn.lock tsconfig.json /src/
+RUN corepack enable 
 RUN yarn
 RUN yarn tsc
 
