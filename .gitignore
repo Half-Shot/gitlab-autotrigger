@@ -1,3 +1,4 @@
 node_modules
 yarn-error.log
 index.js
+.yarn/install-state.gz
