@@ -4,11 +4,14 @@
   "main": "index.js",
   "author": "Half-Shot <will@half-shot.uk>",
   "license": "MIT",
-  "dependencies": {},
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.2",
     "@types/node": "^20",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
-  }
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  },
+  "packageManager": "yarn@4.4.1"
 }
